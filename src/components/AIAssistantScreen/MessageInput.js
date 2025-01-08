@@ -21,21 +21,21 @@ const MessageInput = ({ onSendMessage }) => {
 
   return (
     <Box
-  sx={{
-    display: 'flex',
-    justifyContent: 'center', // Center horizontally
-    alignItems: 'center', // Center vertically (if needed)
-    position: 'relative',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '30px',
-    padding: '10px 15px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    maxWidth: '700px',
-    width: '100%',
-    margin: '0 auto', // Ensure the component is centered within its parent container
-  }}
->
+    sx={{
+      display: 'flex',
+      justifyContent: 'center', // Center horizontally
+      alignItems: 'center', // Center vertically (if needed)
+      position: 'relative',
+      backgroundColor: 'rgba(255, 255, 255, 0.6)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '30px',
+      padding: '10px 15px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      maxWidth: '700px',
+      width: '100%',
+      margin: '0 auto', // Ensure the component is centered within its parent container
+    }}
+    >
   <TextField
     placeholder="Type your message here..."
     variant="standard"
