@@ -29,7 +29,7 @@ const Chats = ({ messages }) => {
           {message.sender === 'user' ? (
             <Box
               sx={{
-                backgroundColor: '#4caf50', // User message background color (green)
+                backgroundColor: 'rgba(255, 255, 255, 0.1)', // AI message background color (light gray)
                 color: '#fff', // Text color
                 borderRadius: '10px',
                 padding: '10px 15px',
@@ -43,8 +43,7 @@ const Chats = ({ messages }) => {
           ) : (
             <Box
               sx={{
-                backgroundColor: '#f1f1f1', // AI message background color (light gray)
-                color: '#000', // Text color
+                color: '#fff', // Text color
                 borderRadius: '10px',
                 padding: '10px 15px',
                 width: '100%', // 100% width for AI messages
