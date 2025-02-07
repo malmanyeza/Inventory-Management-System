@@ -1,6 +1,7 @@
 // InventoryScreen.jsx
 import React, { useState } from 'react';
 import InventoryTable from '../components/InventoryScreen/InventoryTable';
+import { Box } from '@mui/material';
 import InventoryTableHeader from '../components/InventoryScreen/InventoryTableHeader';
 
 const InventoryScreen = () => {
@@ -15,7 +16,7 @@ const InventoryScreen = () => {
   const handleApplyFilter = (filter) => {/* existing logic */};
 
   return (
-    <div style={{
+    <Box sx={{
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
@@ -25,7 +26,7 @@ const InventoryScreen = () => {
       padding: '20px',
       position: 'relative',
     }}>
-      <div style={{
+      <Box sx={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
@@ -37,38 +38,29 @@ const InventoryScreen = () => {
           onApplyFilter={handleApplyFilter}
         />
         
-        <div style={{
+        <Box sx={{
           flex: 1,
           width: '100%',
-          marginTop: '10px',
+          mt: '10px',
           overflowY: 'auto',
-          paddingRight: '10px',
+          pr: '10px',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '10px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255, 255, 255, 0.5)',
+            borderRadius: '10px',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+          }
         }}>
           <InventoryTable inventory={inventory} />
-        </div>
-      </div>
-
-      {/* Scrollbar styles */}
-      <style>
-        {`
-          ::-webkit-scrollbar {
-            width: 8px;
-          }
-          ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-          }
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.7);
-          }
-        `}
-      </style>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

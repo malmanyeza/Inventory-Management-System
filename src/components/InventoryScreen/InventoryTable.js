@@ -26,6 +26,7 @@ const InventoryTable = ({ inventory }) => {
                   textAlign: 'center',
                   borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
                   py: 2,
+                  backgroundColor: 'rgba(255,255,255,0.05)',
                 }}
               >
                 {header}
@@ -51,6 +52,7 @@ const InventoryTable = ({ inventory }) => {
                     color: '#ffffff',
                     textAlign: 'center',
                     py: 1.5,
+                    borderColor: 'rgba(255,255,255,0.1)'
                   }}
                 >
                   {key === 'price' ? `$${value.toFixed(2)}` : value}

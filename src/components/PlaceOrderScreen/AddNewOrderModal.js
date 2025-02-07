@@ -196,7 +196,7 @@ const AddNewOrderModal = ({ open, onClose }) => {
               </>
             ) : (
               <>
-                {['Company Name', 'Address', 'Email', 'Phone'].map(field => (
+                {['Registered Company Name','Trade Name', 'Address', 'Email', 'Phone', 'VAT','TIN number'].map(field => (
                   <TextField
                     key={field}
                     label={field}

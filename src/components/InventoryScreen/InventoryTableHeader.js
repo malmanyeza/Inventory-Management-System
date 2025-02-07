@@ -9,12 +9,16 @@ const InventoryTableHeader = ({ onAddProduct, onExportPdf, onApplyFilter }) => {
   const buttonStyle = {
     color: '#fff',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
-    borderRadius: '5px',
-    padding: '8px 12px',
+    '&:hover': { 
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    },
+    borderRadius: '8px',
+    padding: '8px 16px',
     marginRight: '10px',
     textTransform: 'none',
     fontSize: '0.9rem',
+    transition: 'all 0.2s ease',
   };
 
   return (
@@ -28,6 +32,7 @@ const InventoryTableHeader = ({ onAddProduct, onExportPdf, onApplyFilter }) => {
         backdropFilter: 'blur(10px)',
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        mb: 2,
       }}
     >
       <Button
@@ -61,10 +66,14 @@ const InventoryTableHeader = ({ onAddProduct, onExportPdf, onApplyFilter }) => {
         onClose={() => setAnchorEl(null)}
         sx={{
           '& .MuiPaper-root': {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
             borderRadius: '8px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            '& .MuiMenuItem-root': {
+              color: '#fff',
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+            }
           },
         }}
       >
@@ -75,10 +84,7 @@ const InventoryTableHeader = ({ onAddProduct, onExportPdf, onApplyFilter }) => {
               onApplyFilter(filter);
               setAnchorEl(null);
             }}
-            sx={{
-              fontSize: '0.9rem',
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.05)' },
-            }}
+            sx={{ fontSize: '0.9rem' }}
           >
             {filter}
           </MenuItem>
