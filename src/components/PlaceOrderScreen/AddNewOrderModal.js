@@ -2,15 +2,67 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Modal, Box, TextField, Button, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import { useOrders } from '../../context/OrdersContext';
 
 const AddNewOrderModal = ({ open, onClose }) => {
   const [editMode, setEditMode] = useState(false);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [items, setItems] = useState([{ id: 1, quantity: 1, product: '', price: 0, vat: 16 }]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [newCustomerData] = useState({
+    tradeName: '',
+    registeredName: '',
+    vatNumber: '',
+    tinNumber: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
+
+  const { addOrder } = useOrders();
+
+
 
   const handleAddItem = useCallback(() => {
     setItems(prev => [...prev, { id: Date.now(), quantity: 1, product: '', price: 0, vat: 16 }]);
   }, []);
+
+
+  const customers = [
+    {
+      id: 1,
+      name: "OK Zimbabwe",
+      tin: "1234-5678-901",
+      vat: "VAT001",
+      contact: "+263 77 1234567",
+      address: "1 Main Street, Harare"
+    },
+    {
+      id: 2,
+      name: "Pick n Pay",
+      tin: "2345-6789-012",
+      vat: "VAT002",
+      contact: "+263 77 2345678",
+      address: "2 Secondary Road, Harare"
+    },
+    {
+      id: 3,
+      name: "Spar",
+      tin: "3456-7890-123",
+      vat: "VAT003",
+      contact: "+263 77 3456789",
+      address: "3 Tertiary Ave, Harare"
+    },
+    {
+      id: 4,
+      name: "TM Supermarket",
+      tin: "4567-8901-234",
+      vat: "VAT004",
+      contact: "+263 77 4567890",
+      address: "4 Quaternary Blvd, Harare"
+    }
+  ];
+
   // Sample company details
   const [companyDetails] = useState({
     name: "Mazoe Holdings",
@@ -22,8 +74,26 @@ const AddNewOrderModal = ({ open, onClose }) => {
     salesPerson: "John Doe"
   });
 
-  // Sample customers
-  const customers = ["OK Zimbabwe", "Pick n Pay", "Spar", "TM Supermarket"];
+  const handleSubmit = async () => {
+    const orderInfo = {
+      companyDetails,       // your company info (static)
+      customer: selectedCustomer || newCustomerData, // full customer details
+      items,                // array of items
+      subtotalExcl,         // calculated subtotal (excl. VAT)
+      vatTotal,             // calculated VAT total
+      invoiceTotal,         // calculated invoice total
+      // any additional fields
+    };
+  
+    try {
+      await addOrder(orderInfo);
+      onClose(); // Close the modal upon successful order submission
+    } catch (error) {
+      // Handle submission error (e.g., display a message)
+      console.error("Order submission failed", error);
+    }
+  };
+
   
   // Calculate totals
   const subtotalExcl = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
@@ -176,14 +246,20 @@ const AddNewOrderModal = ({ open, onClose }) => {
             {!isNewCustomer ? (
               <>
                 <Select
+                  value={selectedCustomer ? selectedCustomer.id : ""}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    const cust = customers.find(customer => customer.id === id);
+                    setSelectedCustomer(cust);
+                  }}
                   fullWidth
                   displayEmpty
                   {...dropdownProps}
                 >
                   <MenuItem value="">Select Customer</MenuItem>
                   {customers.map(customer => (
-                    <MenuItem key={customer} value={customer} sx={{ color: '#fff' }}>
-                      {customer}
+                    <MenuItem key={customer.id} value={customer.id} sx={{ color: '#fff' }}>
+                      {customer.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -196,18 +272,24 @@ const AddNewOrderModal = ({ open, onClose }) => {
               </>
             ) : (
               <>
-                {['Registered Company Name','Trade Name', 'Address', 'Email', 'Phone', 'VAT','TIN number'].map(field => (
+                {Object.entries(newCustomerData).map(([key, value]) => (
                   <TextField
-                    key={field}
-                    label={field}
+                    key={key}
+                    label={key}
+                    value={value}
+                    onChange={(e) => {
+                      const { name, value } = e.target;
+                      newCustomerData[name] = value;
+                    }}
                     fullWidth
                     sx={{ 
-                      mb: 1, 
+                      mb: 2, 
                       '& .MuiInputBase-input': { color: '#fff' },
                       '& .MuiInputLabel-root': { color: '#fff' }
                     }}
                   />
                 ))}
+
                 <Button 
                   onClick={() => setIsNewCustomer(false)}
                   sx={{ color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}

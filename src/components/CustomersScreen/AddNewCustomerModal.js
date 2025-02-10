@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Modal, Box, TextField, Button, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useCustomers } from '../../context/CustomersContext';
 
 const AddNewCustomerModal = ({ open, onClose }) => {
+  const { addCustomer } = useCustomers();
+
   const [formData, setFormData] = useState({
     tradeName: '',
     registeredName: '',
@@ -17,6 +20,25 @@ const AddNewCustomerModal = ({ open, onClose }) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleSaveCustomer = async () => {
+
+    try {
+      await addCustomer(formData);
+      setFormData({
+        tradeName: '',
+        registeredName: '',
+        vatNumber: '',
+        tinNumber: '',
+        email: '',
+        phone: '',
+        address: ''
+      });
+      onClose();
+    } catch (error) {
+      alert("Error adding customer: " + error.message);
+    }
+  }
 
   return (
     <Modal 
@@ -165,6 +187,7 @@ const AddNewCustomerModal = ({ open, onClose }) => {
             Cancel
           </Button>
           <Button 
+            onClick={handleSaveCustomer}
             variant="contained"
             sx={{ 
               bgcolor: 'rgba(255,255,255,0.1)', 
