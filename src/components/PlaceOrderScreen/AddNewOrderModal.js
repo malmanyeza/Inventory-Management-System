@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Modal, Box, TextField, Button, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,8 +7,9 @@ import { useOrders } from '../../context/OrdersContext';
 const AddNewOrderModal = ({ open, onClose }) => {
   const [editMode, setEditMode] = useState(false);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [items, setItems] = useState([{ id: 1, quantity: 1, product: '', price: 0, vat: 16 }]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Default to current date
+  const [items, setItems] = useState([{ id: 1, productId: "", quantity: 1 }]);
   const [newCustomerData] = useState({
     tradeName: '',
     registeredName: '',
@@ -18,9 +19,86 @@ const AddNewOrderModal = ({ open, onClose }) => {
     phone: '',
     address: ''
   });
+  const [totals, setTotals] = useState({
+    subtotalExcl: 0,
+    vatTotal: 0,
+    invoiceTotal: 0,
+  });
+  
 
   const { addOrder } = useOrders();
 
+  const products = [
+    { id: 1, name: "Mazoe Orange Crush", pricePerCase: 120.00, unitsPerCase: 12, volume: "2L" },
+    { id: 2, name: "Coca Cola", pricePerCase: 144.00, unitsPerCase: 24, volume: "500ml" },
+  ];
+  
+  const VAT_RATE = 0.1304;
+
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value); 
+  };
+
+const allowedFields = ["productId", "name", "pricePerCase", "unitPrice", "vatAmount", "totalExcl", "totalIncl", "quantity"]; // Fields in the database
+
+const handleChange = (index, field, value) => {
+  const updatedItems = [...items];
+  updatedItems[index][field] = value;
+
+  // If the changed field affects pricing (like productId or quantity), update calculated fields:
+  if (field === "productId" || field === "quantity") { 
+    const product = getProductDetails(value); // Fetch product details
+
+    if (product.id) {
+      updatedItems[index].name = product.name; // Set product name
+      updatedItems[index].pricePerCase = product.pricePerCase; // Set product price
+    }
+
+    updatedItems[index].quantity = parseInt(updatedItems[index].quantity) || 1;
+
+    // Recalculate pricing fields
+    const { unitPrice, vatAmount, totalExcl, totalIncl } = calculateValues(updatedItems[index]);
+    updatedItems[index].unitPrice = unitPrice;
+    updatedItems[index].vatAmount = vatAmount;
+    updatedItems[index].totalExcl = totalExcl;
+    updatedItems[index].totalIncl = totalIncl;
+  }
+
+  // Filter out any extra properties before updating state
+  const cleanedItems = updatedItems.map(item =>
+    Object.fromEntries(Object.entries(item).filter(([key]) => allowedFields.includes(key)))
+  );
+
+  setItems(cleanedItems);
+};
+  
+  const getProductDetails = (productId) => products.find(p => p.id === productId) || {};
+  
+  const calculateValues = (item) => {
+    const product = getProductDetails(item.productId);
+    if (!product.id) return { unitPrice: 0, vatAmount: 0, totalExcl: 0, totalIncl: 0 };
+
+    const unitPrice = parseFloat((product.pricePerCase / (1 + VAT_RATE)).toFixed(2));
+    const totalExcl = parseFloat((unitPrice * item.quantity).toFixed(2));
+    const vatAmount = parseFloat((totalExcl * VAT_RATE).toFixed(2));
+    const totalIncl = parseFloat((totalExcl + vatAmount).toFixed(2));
+
+    return { unitPrice, vatAmount, totalExcl, totalIncl };
+};
+  
+useEffect(() => {
+  const subtotalExcl = items.reduce((sum, item) => sum + (parseFloat(item.totalExcl) || 0), 0).toFixed(2);
+  const vatTotal = items.reduce((sum, item) => sum + (parseFloat(item.vatAmount) || 0), 0).toFixed(2);
+  const invoiceTotal = items.reduce((sum, item) => sum + (parseFloat(item.totalIncl) || 0), 0).toFixed(2);
+
+  setTotals({ 
+      subtotalExcl: parseFloat(subtotalExcl), 
+      vatTotal: parseFloat(vatTotal), 
+      invoiceTotal: parseFloat(invoiceTotal) 
+  });
+}, [items]);
+  
+  
 
 
   const handleAddItem = useCallback(() => {
@@ -76,12 +154,13 @@ const AddNewOrderModal = ({ open, onClose }) => {
 
   const handleSubmit = async () => {
     const orderInfo = {
+      date: selectedDate,
       companyDetails,       // your company info (static)
       customer: selectedCustomer || newCustomerData, // full customer details
       items,                // array of items
-      subtotalExcl,         // calculated subtotal (excl. VAT)
-      vatTotal,             // calculated VAT total
-      invoiceTotal,         // calculated invoice total
+      subtotalExcl:totals.subtotalExcl,         // calculated subtotal (excl. VAT)
+      vatTotal:totals.vatTotal,             // calculated VAT total
+      invoiceTotal:totals.invoiceTotal         // calculated invoice total
       // any additional fields
     };
   
@@ -196,6 +275,8 @@ const AddNewOrderModal = ({ open, onClose }) => {
             <TextField
               type="date"
               label="Order Date"
+              value={selectedDate}
+              onChange={handleDateChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
               sx={{ 
@@ -306,51 +387,51 @@ const AddNewOrderModal = ({ open, onClose }) => {
             
             <TableContainer>
               <Table>
-                <TableHead
-                  sx={{ 
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    flexShrink: 0
-                  }}
-                >
+                <TableHead sx={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
                   <TableRow>
-                    {['Quantity', 'Product', 'Unit Price', 'VAT %', 'Total (excl)', 'Total (incl)'].map(header => (
-                      <TableCell 
-                        key={header} 
-                        sx={{ 
-                          color: '#fff', 
-                          borderColor: 'rgba(255,255,255,0.1)',
-                          backgroundColor: 'rgba(255,255,255,0.05)'
-                        }}
-                      >
+                    {["Quantity", "Product", "Unit Price", "VAT %", "Total (excl)", "Total (incl)"].map(header => (
+                      <TableCell key={header} sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
                         {header}
                       </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
-                        <TextField 
-                          type="number" 
-                          defaultValue={1} 
-                          sx={{ width: 70, '& .MuiInputBase-input': { color: '#fff' } }} 
-                        />
-                      </TableCell>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
-                        <Select 
-                          {...dropdownProps}
-                        >
-                          <MenuItem value="" sx={{ color: '#fff' }}>Select Product</MenuItem>
-                          <MenuItem value="mazoe" sx={{ color: '#fff' }}>Mazoe Orange</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>$10.00</TableCell>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>16%</TableCell>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>$10.00</TableCell>
-                      <TableCell sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>$11.60</TableCell>
-                    </TableRow>
-                  ))}
+                  {items.map((item, index) => {
+                    const { unitPrice, vatAmount, totalExcl, totalIncl } = calculateValues(item);
+                    const product = getProductDetails(item.productId);
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => handleChange(index, "quantity", Number(e.target.value))}
+                            sx={{ width: 70, '& .MuiInputBase-input': { color: '#fff' } }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={item.productId}
+                            onChange={(e) => handleChange(index, "productId", Number(e.target.value))}
+                            sx={{ color: '#fff' }}
+                          >
+                            <MenuItem value=""><em>Select Product</em></MenuItem>
+                            {products.map((product) => (
+                              <MenuItem key={product.id} value={product.id}>
+                                {`${product.name} ${product.volume} x ${product.unitsPerCase}`}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </TableCell>
+                        <TableCell sx={{ color: '#fff' }}>${unitPrice.toFixed(2)}</TableCell>
+                        <TableCell sx={{ color: '#fff' }}>${vatAmount.toFixed(2)}</TableCell>
+                        <TableCell sx={{ color: '#fff' }}>${totalExcl.toFixed(2)}</TableCell>
+                        <TableCell sx={{ color: '#fff' }}>${totalIncl.toFixed(2)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  
                 </TableBody>
               </Table>
             </TableContainer>
@@ -370,13 +451,13 @@ const AddNewOrderModal = ({ open, onClose }) => {
             {/* Totals */}
             <Box sx={{ mt: 3, textAlign: 'right' }}>
               <Typography variant="body2" sx={{ color: '#fff' }}>
-                Subtotal (excl): ${subtotalExcl.toFixed(2)}
+                Subtotal (excl): ${totals.subtotalExcl.toFixed(2)}
               </Typography>
               <Typography variant="body2" sx={{ color: '#fff' }}>
-                VAT Total: ${vatTotal.toFixed(2)}
+                VAT Total: ${totals.vatTotal.toFixed(2)}
               </Typography>
               <Typography variant="body2" sx={{ color: '#fff', fontWeight: 'bold' }}>
-                Invoice Total: ${invoiceTotal.toFixed(2)}
+                Invoice Total: ${totals.invoiceTotal.toFixed(2)}
               </Typography>
             </Box>
           </Box>
@@ -402,6 +483,7 @@ const AddNewOrderModal = ({ open, onClose }) => {
             Cancel
           </Button>
           <Button 
+            onClick={handleSubmit}
             variant="contained"
             sx={{ 
               bgcolor: 'rgba(255,255,255,0.1)', 
